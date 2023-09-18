@@ -39,38 +39,27 @@ class Sorting {
 		}
 		int split = step(arr, begin, end);
 
-		if(current_threads+thread_nr <= max_threads)
+		if(current_threads+thread_nr <= max_threads && end-begin >16)
 		{
-			if(end-begin >16)
+			// can spawn new thread (and remaining length is big enough)
+			Thread t = new Thread(new Runnable() 
 			{
-				// can spawn new thread (and remaining length is big enough)
-				
-				Thread t = new Thread(new Runnable() 
+				public void run() 
 				{
-					public void run() 
-					{
+					// uncomment the following line to show that only max_threads-1 additional threads are spawned
 //						System.out.println("Spawning new thread " + (current_threads + thread_nr) + " with current_threads = " + current_threads + " from thread_nr = " + thread_nr + " and end-begin = " + (split-begin));
-						Sorting s = new Sorting();
-						s.sort(arr, current_threads+thread_nr, current_threads*2, max_threads, begin, split-1); 
-//						System.out.println("thread " + (current_threads + thread_nr) + " terminated");
-					}
-				});
-				t.start();
-//				System.out.println("Going deeper " + (thread_nr) + " with current_threads = " + current_threads + " from thread_nr = " + thread_nr + " and end-begin = " + (end-split+1));
-				sort(arr, thread_nr, current_threads*2, max_threads, split+1, end);
-				try
-				{
-					t.join();
+					Sorting s = new Sorting();
+					s.sort(arr, current_threads+thread_nr, current_threads*2, max_threads, begin, split-1); 
 				}
-				catch(Exception e)
-				{}
-			}
-			else
+			});
+			t.start();
+			sort(arr, thread_nr, current_threads*2, max_threads, split+1, end);
+			try
 			{
-//				System.out.println("Too small: thread_nr=" + thread_nr + ", current_threads="+current_threads+ ", end-begin=" + (end-begin));
-				sort(arr, thread_nr, current_threads, max_threads, begin, split-1);
-				sort(arr, thread_nr, current_threads, max_threads, split+1, end);
+				t.join();
 			}
+			catch(Exception e)
+			{}
 		}
 		else
 		{
@@ -109,12 +98,6 @@ public class Main
 		System.out.println();
 	}
 	
-	private static void copy(int[] src, int[] dest)
-	{
-		for(int i = 0; i < arr_length; i++)
-			dest[i] = src[i];
-	}
-
 	private static void generate(int[] arr, long seed)
 	{
 		Random random = new Random(seed);
@@ -136,14 +119,14 @@ public class Main
 			System.out.println("Array is sorted!!!");
 	}
 
-	public static void measure(int[] org, int warmup_runs, int real_runs, int max_threads)
+	public static void measure(int warmup_runs, int real_runs, int max_threads, int seed)
 	{
 		int[] cpy = new int[arr_length];
 		Sorting sort = new Sorting();
 		System.out.print("warmup");
 		for (int i=0;i<warmup_runs;i++)
 		{
-			copy(org, cpy);
+			generate(cpy, seed+i);
 			sort.sort(cpy, max_threads);
 			System.out.print(".");
 			check(cpy, true);
@@ -153,23 +136,23 @@ public class Main
 		long total_time = 0;
 		for (int i=0;i<real_runs;i++)
 		{
-			copy(org, cpy);
+			generate(cpy, seed+i);
 			long begin_time = System.nanoTime();
 			sort.sort(cpy, max_threads);
 			long end_time = System.nanoTime();
+			check(cpy, false);
 			total_time+= end_time-begin_time;
 		}
-		System.out.println(real_runs + " runs took " + (total_time/1000000) + "ms on " + max_threads + " threads!");
+		System.out.println(real_runs + " runs took " + (total_time/1_000_000) + "ms on " + max_threads + " threads!");
 
 	}
 
 
-	public static void main(String args[]) {
+	public static void main(String args[])
+	{
 		// generate array of 10000000 integers
 		arr_length = 10_000_000;
-		int[] original = new int[arr_length];
-		generate(original, 1111);
 		for (int threads = 1; threads <= 64; threads*=2)
-			measure(original, 20, 10, threads);
+			measure(20, 10, threads, 1111);
 	}
 }
