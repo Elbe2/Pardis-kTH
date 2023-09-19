@@ -1,9 +1,29 @@
 import java.util.Random;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Phaser;
+import java.util.concurrent.TimeUnit;
 
 class Sorting {
-	public void sort(int[] arr, int max_threads)
+	private ExecutorService executor;
+	private int min_split_size = 512;
+	public void sort(int[] arr, int max_threads, Sorting self)
 	{
-		sort(arr, 1, 1, max_threads, 0, arr.length-1);
+		final Phaser phaser = new Phaser(1); // register self
+		executor = Executors.newFixedThreadPool(max_threads);
+		phaser.register();
+		Runnable task = () -> {
+			this.sort(arr, 0, arr.length-1, phaser);
+			phaser.arriveAndDeregister();
+		};
+		executor.execute(task);
+		try
+		{
+			phaser.arriveAndAwaitAdvance();
+			executor.shutdown(); // wait for all tasks to end and close
+			executor.awaitTermination(10, TimeUnit.SECONDS); // this should never wait
+		}
+		catch(Exception e){}
 	}
 
 	private void swap(int[] arr, int a, int b) 
@@ -13,7 +33,7 @@ class Sorting {
 		arr[b] = temp;
 	}
 
-	private void sort(int[] arr, int thread_nr, int current_threads,int max_threads, int begin, int end)
+	private void sort(int[] arr, int begin, int end, Phaser phaser)
 	{
 		if (end-begin < 3)
 		{
@@ -38,34 +58,38 @@ class Sorting {
 		}
 		int split = step(arr, begin, end);
 
-		if(current_threads+thread_nr <= max_threads && end-begin >16)
-		{
-			// can spawn new thread (and remaining length is big enough)
-			Thread t = new Thread(new Runnable() 
-			{
-				public void run() 
-				{
-					// uncomment the following line to show that only max_threads-1 additional threads are spawned
-//						System.out.println("Spawning new thread " + (current_threads + thread_nr) + " with current_threads = " + current_threads + " from thread_nr = " + thread_nr + " and end-begin = " + (split-begin));
-					Sorting s = new Sorting();
-					s.sort(arr, current_threads+thread_nr, current_threads*2, max_threads, begin, split-1); 
-				}
-			});
-			t.start();
-			sort(arr, thread_nr, current_threads*2, max_threads, split+1, end);
-			try
-			{
-				t.join();
-			}
-			catch(Exception e)
-			{}
-		}
-		else
+		boolean manual_low = false;
+		if (split-1-begin > min_split_size)
 		{
 			//sorting without new threads
-			sort(arr, thread_nr, current_threads, max_threads, begin, split-1);
-			sort(arr, thread_nr, current_threads, max_threads, split+1, end);
+			final Phaser phaser2 = phaser.getRegisteredParties() > 60000 ? new Phaser(phaser) : phaser; // check if we have to many registered things in the phaser, if yes create a new one
+			phaser2.register();
+			Runnable task1 = () -> {
+				this.sort(arr, begin, split-1, phaser2);
+				phaser2.arriveAndDeregister();
+			};
+			executor.execute(task1);
 		}
+		else
+			manual_low = true;
+		boolean manual_high = false;
+		if (end-split+1 > min_split_size)
+		{
+			//sorting without new threads
+			final Phaser phaser2 = phaser.getRegisteredParties() > 60000 ? new Phaser(phaser) : phaser; // check if we have to many registered things in the phaser, if yes create a new one
+			phaser2.register();
+			Runnable task2 = () -> {
+				this.sort(arr, split+1, end, phaser2);
+				phaser2.arriveAndDeregister();
+			};
+			executor.execute(task2);
+		}
+		else
+			manual_high = true;
+		if(manual_low)
+			this.sort(arr, begin, split-1, phaser);
+		if(manual_high)
+			this.sort(arr, split+1, end, phaser);
 	}
 
 	public int step(int[] arr, int begin, int end) 
@@ -126,7 +150,7 @@ public class task4
 		for (int i=0;i<warmup_runs;i++)
 		{
 			generate(cpy, seed+i);
-			sort.sort(cpy, max_threads);
+			sort.sort(cpy, max_threads, sort);
 			System.out.print(".");
 			check(cpy, true);
 		}
@@ -137,9 +161,9 @@ public class task4
 		{
 			generate(cpy, seed+i);
 			long begin_time = System.nanoTime();
-			sort.sort(cpy, max_threads);
+			sort.sort(cpy, max_threads, sort);
 			long end_time = System.nanoTime();
-			check(cpy, false);
+			check(cpy, true);
 			total_time+= end_time-begin_time;
 		}
 		System.out.println(real_runs + " runs took " + (total_time/1_000_000) + "ms on " + max_threads + " threads!");
@@ -150,7 +174,7 @@ public class task4
 	public static void main(String args[])
 	{
 		// generate array of 10000000 integers
-		arr_length = 10_000_000;
+		arr_length = 1_000_000;
 		for (int threads = 1; threads <= 64; threads*=2)
 			measure(20, 10, threads, 1111);
 	}
