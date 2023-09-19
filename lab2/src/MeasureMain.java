@@ -73,6 +73,8 @@ public class MeasureMain
             return new ThreadSort(threads);
         case "ExecutorService":
             return new ExecutorServiceSort(threads);
+        case "ExecutorServicePhaser":
+            return new ExecutorServicePhaserSort(threads);
         case "ForkJoinPool":
             return new ForkJoinPoolSort(threads);
         case "ParallelStream":

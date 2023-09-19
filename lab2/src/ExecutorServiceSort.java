@@ -1,9 +1,11 @@
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class ExecutorServiceSort implements Sorter
 {
-    public final int threads;
+    private final int threads;
+    private static final int threshold = 512;
 
     public ExecutorServiceSort(int threads)
     {
@@ -12,7 +14,12 @@ public class ExecutorServiceSort implements Sorter
 
     public void sort(int[] arr)
     {
-        // TODO: sort arr.
+        AtomicInteger pivots = new AtomicInteger(0);
+        ExecutorService executor = Executors.newFixedThreadPool(threads);
+        executor.submit(new Worker(arr, 0, arr.length - 1, executor, pivots));
+        while (pivots.get() < arr.length)
+        {} // ensuring all pivot points are on their places
+        executor.shutdown();
     }
 
     public int getThreads()
@@ -22,10 +29,50 @@ public class ExecutorServiceSort implements Sorter
 
     private static class Worker implements Runnable
     {
-        Worker()
-        {}
+        private int[] arr;
+        private int begin;
+        private int end;
+        private ExecutorService executor;
+        private AtomicInteger pivots;
+
+        Worker(int[] arr, int begin, int end, ExecutorService executor, AtomicInteger pivots)
+        {
+            this.arr = arr;
+            this.begin = begin;
+            this.end = end;
+            this.executor = executor;
+            this.pivots = pivots;
+        }
 
         public void run()
-        {}
+        {
+            if (end == begin)
+                pivots.incrementAndGet();
+            if (end <= begin)
+                return;
+
+            int split_position = Auxiliary.split(arr, begin, end);
+            pivots.incrementAndGet();
+
+            if ((split_position - 1) - begin > threshold)
+                executor.submit(new Worker(arr, begin, split_position - 1, executor, pivots));
+            if (end - (split_position + 1) > threshold)
+                executor.submit(new Worker(arr, split_position + 1, end, executor, pivots));
+
+            if ((split_position - 1) - begin <= threshold)
+            {
+                int old = end;
+                end = split_position - 1;
+                run();
+                end = old;
+            }
+            if (end - (split_position + 1) <= threshold)
+            {
+                int old = begin;
+                begin = split_position + 1;
+                run();
+                begin = old;
+            }
+        }
     }
 }
