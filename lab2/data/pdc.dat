@@ -1,0 +1,12 @@
+# Average execution times of incrementers with N threads
+# Note: This is placeholder data
+# Sequential, Thread, ExecutorService, ForkJoinPool, ParallelStream
+# N     Seq     T       ES      FJP     PS
+1       3000    3220    3403    3328    3228
+2       3000    2230    2303    2228    2328
+4       3000    1200    1203    1228    1228
+8       3000    900     982     990     890
+16      3000    804     806     810     710
+32      3000    405     407     410     510
+48      3000    195     196     199     299
+96      3000    100     104     101     101
