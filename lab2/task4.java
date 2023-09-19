@@ -1,5 +1,4 @@
 import java.util.Random;
-import java.util.concurrent.ThreadLocalRandom;
 
 class Sorting {
 	public void sort(int[] arr, int max_threads)
@@ -88,7 +87,7 @@ class Sorting {
 	}
 }
 
-public class Main 
+public class task4 
 {
 	private static int arr_length = 10;
 	public static void print(int[] arr)
