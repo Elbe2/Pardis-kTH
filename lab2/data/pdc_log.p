@@ -1,18 +1,21 @@
 # Compile this plot using
-# 'gnuplot pdc.p'
+# 'gnuplot pdc_log.p'
 
 # Output size
 set terminal png size 800,500
 
 # Output filename
-set output 'pdc.png'
+set output 'pdc_log.png'
 
 # Graphics title
-set title "X sort performance on PDC Dardel"
+set title "X sort performance on PDC Dardel (log scale)"
 
 # Set x and y label
 set xlabel 'threads'
 set ylabel 'ms'
+set logscale x
+set logscale y
+set yrange[100:1100]
 
 # Plot the data
 # using X:Y means plot using column X and column Y
