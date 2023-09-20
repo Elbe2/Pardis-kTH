@@ -12,7 +12,9 @@ public class ForkJoinPoolSort implements Sorter
 
     public void sort(int[] arr)
     {
-        new ForkJoinPool(threads).invoke(new Worker(arr, 0, arr.length - 1));
+        ForkJoinPool pool = new ForkJoinPool(threads);
+        pool.invoke(new Worker(arr, 0, arr.length - 1));
+        pool.shutdown();
     }
 
     public int getThreads()

@@ -54,19 +54,22 @@ public class ExecutorServiceSort implements Sorter
             int split_position = Auxiliary.split(arr, begin, end);
             pivots.incrementAndGet();
 
-            if ((split_position - 1) - begin > threshold)
+            boolean submit_lower = (split_position - 1) - begin > threshold;
+            boolean submit_upper = end - (split_position + 1) > threshold;
+
+            if (submit_lower)
                 executor.submit(new Worker(arr, begin, split_position - 1, executor, pivots));
-            if (end - (split_position + 1) > threshold)
+            if (submit_upper)
                 executor.submit(new Worker(arr, split_position + 1, end, executor, pivots));
 
-            if ((split_position - 1) - begin <= threshold)
+            if (!submit_lower)
             {
                 int old = end;
                 end = split_position - 1;
                 run();
                 end = old;
             }
-            if (end - (split_position + 1) <= threshold)
+            if (!submit_upper)
             {
                 int old = begin;
                 begin = split_position + 1;

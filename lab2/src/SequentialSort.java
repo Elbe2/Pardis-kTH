@@ -8,7 +8,7 @@ public class SequentialSort implements Sorter
         sort(arr, 0, arr.length - 1);
     }
 
-    private void sort(int[] arr, int begin, int end)
+    public void sort(int[] arr, int begin, int end)
     {
         if (end <= begin) // no elements to sort
             return;
