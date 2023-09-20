@@ -19,8 +19,7 @@ public class ExecutorServicePhaserSort implements Sorter
         final Phaser phaser = new Phaser(1); // register self
         executor = Executors.newFixedThreadPool(threads);
         phaser.register();
-        Runnable task = () ->
-        {
+        Runnable task = () -> {
             this.sort(arr, 0, arr.length - 1, phaser);
             phaser.arriveAndDeregister();
         };
@@ -47,8 +46,7 @@ public class ExecutorServicePhaserSort implements Sorter
             //sorting without new threads
             final Phaser phaser2 = phaser.getRegisteredParties() > 60000 ? new Phaser(phaser) : phaser; // check if we have to many registered things in the phaser, if yes create a new one
             phaser2.register();
-            Runnable task1 = () ->
-            {
+            Runnable task1 = () -> {
                 this.sort(arr, begin, split - 1, phaser2);
                 phaser2.arriveAndDeregister();
             };
@@ -62,8 +60,7 @@ public class ExecutorServicePhaserSort implements Sorter
             //sorting without new threads
             final Phaser phaser2 = phaser.getRegisteredParties() > 60000 ? new Phaser(phaser) : phaser; // check if we have to many registered things in the phaser, if yes create a new one
             phaser2.register();
-            Runnable task2 = () ->
-            {
+            Runnable task2 = () -> {
                 this.sort(arr, split + 1, end, phaser2);
                 phaser2.arriveAndDeregister();
             };
