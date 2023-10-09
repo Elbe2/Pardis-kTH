@@ -1,5 +1,9 @@
 import java.util.concurrent.atomic.AtomicMarkableReference;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.ArrayList;
+import java.util.function.Supplier;
 
 public class LockFreeSkipList<T extends Comparable<T>> implements LockFreeSet<T> {
 	/* Number of levels */
@@ -8,11 +12,37 @@ public class LockFreeSkipList<T extends Comparable<T>> implements LockFreeSet<T>
 	private final Node<T> head = new Node<T>();
 	private final Node<T> tail = new Node<T>();
 
+    private ArrayList<Log.Entry> log;
+    private Lock lock;
+
 	public LockFreeSkipList() {
 		for (int i = 0; i < head.next.length; i++) {
 			head.next[i] = new AtomicMarkableReference<LockFreeSkipList.Node<T>>(tail, false);
 		}
+        log = new ArrayList<Log.Entry>();
+        lock = new ReentrantLock();
 	}
+
+    private void submitEntry(Log.Entry e) {
+        lock.lock();
+        try {
+            log.add(e);
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    private boolean setTimeStamp(Log.Entry e, Supplier<Boolean> lambda)
+    {
+        lock.lock();
+        try {
+            boolean ret = lambda.get();
+            e.timestamp=System.nanoTime();
+            return ret;
+        } finally {
+            lock.unlock();
+        }
+    }
 
 	private static final class Node<T> {
 		private final T value;
@@ -60,38 +90,53 @@ public class LockFreeSkipList<T extends Comparable<T>> implements LockFreeSet<T>
 
 	@SuppressWarnings("unchecked")
 	public boolean add(int threadId, T x) {
-		int topLevel = randomLevel();
-		int bottomLevel = 0;
-		Node<T>[] preds = (Node<T>[]) new Node[MAX_LEVEL + 1];
-		Node<T>[] succs = (Node<T>[]) new Node[MAX_LEVEL + 1];
-		while (true) {
-			boolean found = find(x, preds, succs);
-			if (found) {
-				return false;
-			} else {
-				Node<T> newNode = new Node(x, topLevel);
-				for (int level = bottomLevel; level <= topLevel; level++) {
-					Node<T> succ = succs[level];
-					newNode.next[level].set(succ, false);
-				}
-				Node<T> pred = preds[bottomLevel];
-				Node<T> succ = succs[bottomLevel];
-				if (!pred.next[bottomLevel].compareAndSet(succ, newNode, false, false)) {
-					continue;
-				}
-				for (int level = bottomLevel + 1; level <= topLevel; level++) {
-					while (true) {
-						pred = preds[level];
-						succ = succs[level];
-						if (pred.next[level].compareAndSet(succ, newNode, false, false))
-							break;
-						find(x, preds, succs);
-					}
-				}
-				return true;
-			}
-		}
-	}
+        int topLevel = randomLevel();
+        int bottomLevel = 0;
+        Node<T>[] preds = (Node<T>[]) new Node[MAX_LEVEL + 1];
+        Node<T>[] succs = (Node<T>[]) new Node[MAX_LEVEL + 1];
+        Log.Entry entry = new Log.Entry(threadId,Log.Method.ADD, x.toString(), false, -1);
+        while (true) {
+            boolean found = find(x, preds, succs, entry);
+            if (found) {
+                submitEntry(entry);
+                return false;
+            } else {
+                Node<T> newNode = new Node(x, topLevel);
+                for (int level = bottomLevel; level <= topLevel; level++) {
+                    Node<T> succ = succs[level];
+                    newNode.next[level].set(succ, false);
+                }
+                Node<T> pred = preds[bottomLevel];
+                Node<T> succ = succs[bottomLevel];
+                boolean c;
+                lock.lock();
+                try
+                {
+                    c = pred.next[bottomLevel].compareAndSet(succ, newNode, false, false);
+                    entry.timestamp = System.nanoTime();
+                }
+                finally
+                {
+                    lock.unlock();
+                }
+                if (!c) {
+                    continue;
+                }
+                for (int level = bottomLevel + 1; level <= topLevel; level++) {
+                    while (true) {
+                        pred = preds[level];
+                        succ = succs[level];
+                        if (pred.next[level].compareAndSet(succ, newNode, false, false))
+                            break;
+                        find(x, preds, succs, null);
+                    }
+                }
+                entry.retval = true;
+                submitEntry(entry);
+                return true;
+            }
+        }
+    }
 
 	public boolean remove(T x) {
 		return remove(-1, x);
@@ -163,7 +208,7 @@ public class LockFreeSkipList<T extends Comparable<T>> implements LockFreeSet<T>
 		return curr.value != null && x.compareTo(curr.value) == 0;
 	}
 
-	private boolean find(T x, Node<T>[] preds, Node<T>[] succs) {
+	private boolean find(T x, Node<T>[] preds, Node<T>[] succs, Log.Entry entry) {
 		int bottomLevel = 0;
 		boolean[] marked = {false};
 		boolean snip;
@@ -178,7 +223,21 @@ retry:
 				while (true) {
 					succ = curr.next[level].get(marked);
 					while (marked[0]) {
-						snip = pred.next[level].compareAndSet(curr, succ, false, false);
+                        if(entry != null && level == 0)
+                        {
+                            lock.lock();
+                            try
+                            {
+                                snip = pred.next[level].compareAndSet(curr, succ, false, false);
+                                entry.timestamp = System.nanoTime();
+                            }
+                            finally
+                            {
+                                lock.unlock();
+                            }
+                        }
+                        else
+    						snip = pred.next[level].compareAndSet(curr, succ, false, false);
 						if (!snip) continue retry;
 						curr = succ;
 						succ = curr.next[level].get(marked);
