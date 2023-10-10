@@ -119,7 +119,7 @@ public class LockFreeSkipList<T extends Comparable<T>> implements LockFreeSet<T>
             boolean found = find(x, preds, succs, entry);
             if (found)
             {
-                submitEntry(entry);
+                submitEntry(entry); // --------------------------------------------- LINEAZIZATION POINT ----------------------------------------
                 return false;
             }
             else
@@ -134,7 +134,7 @@ public class LockFreeSkipList<T extends Comparable<T>> implements LockFreeSet<T>
                 Node<T> succ = succs[bottomLevel];
                 boolean c;
                 lock.lock();
-                try
+                try // --------------------------------------------- LINEAZIZATION POINT ----------------------------------------
                 {
                     c = pred.next[bottomLevel].compareAndSet(succ, newNode, false, false);
                     entry.timestamp = System.nanoTime();

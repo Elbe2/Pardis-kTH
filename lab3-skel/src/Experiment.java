@@ -97,7 +97,7 @@ public class Experiment
                             Log.Entry[] log = lockFreeSet.getLog();
 
                             // Check sequential consistency
-                            Log.validate(log);
+                            Log.validate(log, num_threads);
                         }
                         catch (Exception e)
                         {

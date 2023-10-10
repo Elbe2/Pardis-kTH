@@ -4,6 +4,10 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Set;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+
 public class Log
 {
     private Log()
@@ -11,9 +15,10 @@ public class Log
         // Do not implement
     }
 
-    public static boolean validate(Log.Entry[] log)
+    public static boolean validate(Log.Entry[] log, int num_threads)
     {
         Set<Integer> seqSet = new HashSet<>();
+        int wrong = 0;
 
         // sort log entries so timestampt is in order
         Entry[] sortedLog = Arrays.copyOf(log, log.length);
@@ -43,9 +48,24 @@ public class Log
                 continue;
             System.out.println(i + " " + logi.method.toString() + "(" + logi.argument + "): value of lock free ("
                     + logi.retval + ") not matching sequential (" + resSeq + ")");
-            return false;
+
+            wrong += 1;
+
         }
-        return true;
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter("file-"+num_threads+".txt", false))) {
+            for (Entry entry : sortedLog) {
+                writer.write(entry.toString());
+                writer.newLine(); // Write a new line after each entry
+            }
+            writer.newLine();
+            writer.newLine();
+        } catch (IOException e) {
+            e.printStackTrace();
+            // Handle the exception appropriately, e.g., by logging or throwing it
+        }
+
+        System.out.println("Difference is " + wrong + " out of " + sortedLog.length);
+        return wrong>0;
     }
 
     public static enum Method
