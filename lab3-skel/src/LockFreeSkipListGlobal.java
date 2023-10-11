@@ -1,4 +1,6 @@
 import java.util.concurrent.atomic.AtomicMarkableReference;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -284,6 +286,8 @@ public class LockFreeSkipListGlobal<T extends Comparable<T>> implements LockFree
 
     public Log.Entry[] getLog()
     {
-        return log.toArray(new Log.Entry[log.size()]);
+        Log.Entry[] res = log.toArray(new Log.Entry[log.size()]);
+        Arrays.sort(res, Comparator.comparingLong(entry -> entry.timestamp));
+        return res;
     }
 }
