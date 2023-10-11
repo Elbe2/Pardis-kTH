@@ -1,6 +1,8 @@
 import java.util.concurrent.atomic.AtomicMarkableReference;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 
 public class LockFreeSkipListLocal<T extends Comparable<T>> implements LockFreeSet<T>
 {
@@ -295,6 +297,8 @@ public class LockFreeSkipListLocal<T extends Comparable<T>> implements LockFreeS
         {
             log.addAll(threadLog);
         }
-        return log.toArray(new Log.Entry[log.size()]);
+        Log.Entry[] res = log.toArray(new Log.Entry[log.size()]);
+        Arrays.sort(res, Comparator.comparingLong(entry -> entry.timestamp));
+        return res;
     }
 }
