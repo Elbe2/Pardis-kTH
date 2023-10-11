@@ -71,7 +71,7 @@ public class Experiment
         for (Distribution values : new Distribution[] { new Distribution.Uniform(84, 0, MAX_NUMBER),
                 new Distribution.Normal(84, 15, 0, MAX_NUMBER) })
         {
-            for (int[] distr : new int[][] { new int[] { 1, 1, 0 }, new int[] { 1, 1, 0 } })
+            for (int[] distr : new int[][] { new int[] { 1, 1, 8 }, new int[] { 1, 1, 0 } })
             {
                 for (int num_threads : new int[] { 1, 2, 4, 8, 16, 32, 64, 96 })
                 {
@@ -91,13 +91,14 @@ public class Experiment
 
                             // Run experiment with 16 threads.
                             long time = run_experiment(num_threads, MAX_NUMBER, lockFreeSet, ops, values);
-                            if (i >= warmup) // after warmup
-                                times[i-warmup] = (double)time/1_000_000.0; // get times in ms, so we can actually interpret them
+                            if (i < warmup) 
+                                continue;
+                            times[i-warmup] = (double)time/1_000_000.0; // get times in ms, so we can actually interpret them
                             // Get the log
                             Log.Entry[] log = lockFreeSet.getLog();
 
                             // Check sequential consistency
-                            Log.validate(log, num_threads, false);
+                            Log.validate(log, num_threads, true);
                         }
                         catch (Exception e)
                         {
@@ -111,8 +112,12 @@ public class Experiment
                     // standard deviation:
                     double std_dev = Math.sqrt(Arrays.stream(times).map(x -> Math.pow(x - mean, 2)).average().getAsDouble());
                     System.out.println("Took " + mean +"ms (std="+std_dev+") to finish for " + num_threads+ " workers.\n");
+                    if (num_threads == 16)
+                        break;
                 }
+                break;
             }
+            break;
         }
     }
 }
