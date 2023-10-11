@@ -3,6 +3,8 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 
 public class LockFreeSkipList<T extends Comparable<T>> implements LockFreeSet<T>
 {
@@ -369,6 +371,8 @@ public class LockFreeSkipList<T extends Comparable<T>> implements LockFreeSet<T>
 
     public Log.Entry[] getLog()
     {
-        return log.toArray(new Log.Entry[0]);
+        Log.Entry[] res = log.toArray(new Log.Entry[0]);
+        Arrays.sort(res, Comparator.comparingLong(entry -> entry.timestamp));
+        return res;
     }
 }

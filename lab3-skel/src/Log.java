@@ -14,19 +14,15 @@ public class Log
         // Do not implement
     }
 
-    public static boolean validate(Log.Entry[] log, int num_threads, boolean save)
+    public static int validate(Log.Entry[] log)
     {
         Set<Integer> seqSet = new HashSet<>();
         int wrong = 0;
 
-        // sort log entries so timestampt is in order
-        Entry[] sortedLog = Arrays.copyOf(log, log.length);
-        Arrays.sort(sortedLog, Comparator.comparingLong(entry -> entry.timestamp));
-
         int i = 0;
-        for (Log.Entry logi : sortedLog)
+        for (Log.Entry logi : log)
         {
-            int val = Integer.parseInt(logi.argument); // TODO think
+            int val = Integer.parseInt(logi.argument);
             boolean resSeq;
             switch (logi.method)
             {
@@ -45,29 +41,13 @@ public class Log
             i++;
             if (resSeq == logi.retval)
                 continue;
-            System.out.println(i + " " + logi.method.toString() + "(" + logi.argument + "): value of lock free ("
+            System.err.println(i + " " + logi.method.toString() + "(" + logi.argument + "): value of lock free ("
                     + logi.retval + ") not matching sequential (" + resSeq + ")");
 
             wrong += 1;
 
         }
-        if(save)
-        {
-            try (BufferedWriter writer = new BufferedWriter(new FileWriter("file-"+num_threads+".txt", false))) {
-                for (Entry entry : sortedLog) {
-                    writer.write(entry.toString());
-                    writer.newLine(); // Write a new line after each entry
-                }
-                writer.newLine();
-                writer.newLine();
-            } catch (IOException e) {
-                e.printStackTrace();
-                // Handle the exception appropriately, e.g., by logging or throwing it
-            }
-        }
-        if(wrong>0)
-            System.out.println("Difference is " + wrong + " out of " + sortedLog.length);
-        return wrong>0;
+        return wrong;
     }
 
     public static enum Method
