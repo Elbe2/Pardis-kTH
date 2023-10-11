@@ -66,26 +66,30 @@ public class Experiment
 
     public static void main(String[] args)
     {
-        for (Distribution values : new Distribution[] { new Distribution.Uniform(84, 0, MAX_NUMBER),
-                new Distribution.Normal(84, 15, 0, MAX_NUMBER) })
+        int vt = (int)System.nanoTime();
+        System.out.println("Values seed: " + vt);
+        for (Distribution values : new Distribution[] { new Distribution.Uniform(vt, 0, MAX_NUMBER),
+                new Distribution.Normal(vt, 15, 0, MAX_NUMBER) })
         {
-            for (int[] distr : new int[][] { new int[] { 1, 1, 8 }, new int[] { 1, 1, 0 } })
+            for (int[] distr : new int[][] { new int[] { 1, 1, 0 }, new int[] { 1, 1, 0 } })
             {
                 for (int num_threads : new int[] { 1, 2, 4, 8, 16, 32, 64, 96 })
                 {
-                    int warmup = 10;
-                    int real_runs = 10;
+                    int warmup = 0;
+                    int real_runs = 1;
                     double[] times = new double[real_runs];
                     for (int i = 0; i < warmup + real_runs; i++)
                     {
                         try
                         {
                             // Create a standard lock free skip list
-                            LockFreeSet<Integer> lockFreeSet = new LockFreeSkipList<>();
+                            LockFreeSet<Integer> lockFreeSet = new LockFreeSkipListGlobal<>(num_threads);
 
                             // Create a discrete distribution with seed 42 such that,
                             // p(0) = 1/10, p(1) = 1/10, p(2) = 8/10.
-                            Distribution ops = new Distribution.Discrete(42, distr);
+                            int t = (int)System.nanoTime();
+                            Distribution ops = new Distribution.Discrete(t, distr);
+                            System.out.println("Ops seed: " + t);
 
                             // Run experiment with 16 threads.
                             long time = run_experiment(num_threads, MAX_NUMBER, lockFreeSet, ops, values);
@@ -94,6 +98,7 @@ public class Experiment
                             times[i-warmup] = (double)time/1_000_000.0; // get times in ms, so we can actually interpret them
                             // Get the log
                             Log.Entry[] log = lockFreeSet.getLog();
+                            System.out.println("Log length: " + log.length);
 
                             // Check sequential consistency
                             Log.validate(log, num_threads, true);
@@ -110,12 +115,8 @@ public class Experiment
                     // standard deviation:
                     double std_dev = Math.sqrt(Arrays.stream(times).map(x -> Math.pow(x - mean, 2)).average().getAsDouble());
                     System.out.println("Took " + mean +"ms (std="+std_dev+") to finish for " + num_threads+ " workers.\n");
-                    if (num_threads == 16)
-                        break;
                 }
-                break;
             }
-            break;
         }
     }
 }
