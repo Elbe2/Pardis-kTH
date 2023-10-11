@@ -1,5 +1,3 @@
-import java.util.List;
-
 public interface LockFreeSet<T extends Comparable<T>>
 {
     // Add an element using thread `threadId`.
