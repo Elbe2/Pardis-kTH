@@ -73,8 +73,10 @@ public class Experiment
             {
                 for (int num_threads : new int[] { 1, 2, 4, 8, 16, 32, 64, 96 })
                 {
-                    int warmup = 0;
-                    for (int i = 0; i < warmup + 1; i++)
+                    int warmup = 10;
+                    int real_runs = 10;
+                    double[] times = new double[real_runs];
+                    for (int i = 0; i < warmup + real_runs; i++)
                     {
                         try
                         {
@@ -87,15 +89,13 @@ public class Experiment
 
                             // Run experiment with 16 threads.
                             long time = run_experiment(num_threads, MAX_NUMBER, lockFreeSet, ops, values);
-                            if (i == warmup) // after warmup
-                                System.out.printf("Took %f ms to finish for %d workers.\n", (time) / 1_000_000.0f,
-                                        num_threads);
-
+                            if (i >= warmup) // after warmup
+                                times[i-warmup] = (double)time/1_000_000.0; // get times in ms, so we can actually interpret them
                             // Get the log
                             Log.Entry[] log = lockFreeSet.getLog();
 
                             // Check sequential consistency
-                            Log.validate(log);
+                            Log.validate(log, num_threads, false);
                         }
                         catch (Exception e)
                         {
@@ -103,6 +103,12 @@ public class Experiment
                             System.exit(1);
                         }
                     }
+                    // calc std_dev and mean etc:
+                    // mean:
+                    double mean = Arrays.stream(times).average().getAsDouble();
+                    // standard deviation:
+                    double std_dev = Math.sqrt(Arrays.stream(times).map(x -> Math.pow(x - mean, 2)).average().getAsDouble());
+                    System.out.println("Took " + mean +"ms (std="+std_dev+") to finish for " + num_threads+ " workers.\n");
                 }
             }
         }
