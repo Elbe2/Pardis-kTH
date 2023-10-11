@@ -3,7 +3,6 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.ArrayList;
-import java.util.function.Supplier;
 
 public class LockFreeSkipList<T extends Comparable<T>> implements LockFreeSet<T>
 {
@@ -32,21 +31,6 @@ public class LockFreeSkipList<T extends Comparable<T>> implements LockFreeSet<T>
         try
         {
             log.add(e);
-        }
-        finally
-        {
-            lock.unlock();
-        }
-    }
-
-    private boolean setTimeStamp(Log.Entry e, Supplier<Boolean> lambda)
-    {
-        lock.lock();
-        try
-        {
-            boolean ret = lambda.get();
-            e.timestamp = System.nanoTime();
-            return ret;
         }
         finally
         {
@@ -124,7 +108,7 @@ public class LockFreeSkipList<T extends Comparable<T>> implements LockFreeSet<T>
             }
             else
             {
-                Node<T> newNode = new Node(x, topLevel);
+                Node<T> newNode = new Node<T>(x, topLevel);
                 for (int level = bottomLevel; level <= topLevel; level++)
                 {
                     Node<T> succ = succs[level];
@@ -240,7 +224,6 @@ public class LockFreeSkipList<T extends Comparable<T>> implements LockFreeSet<T>
     public boolean contains(int threadId, T x)
     {
         int bottomLevel = 0;
-        int key = x.hashCode();
         boolean[] marked = { false };
         Log.Entry entry = new Log.Entry(threadId, Log.Method.CONTAINS, x.toString(), false, -1);
         Node<T> pred;
