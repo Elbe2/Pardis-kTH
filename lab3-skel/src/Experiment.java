@@ -107,63 +107,82 @@ public class Experiment
         Distribution[] val_distrs = new Distribution[] { new Distribution.Uniform(val_seed, 0, count),
                 new Distribution.Normal(val_seed, 15, 0, count) };
         int[][] distrs = new int[][] { new int[] { 1, 1, 8 }, new int[] { 1, 1, 0 } };
-        for (int values = 0; values != val_distrs.length; ++values)
+        for (int logging = 0; logging != 3; ++logging)
         {
-            for (int distr = 0; distr != distrs.length; ++distr)
+            for (int values = 0; values != val_distrs.length; ++values)
             {
-                for (int num_threads : nums)
+                for (int distr = 0; distr != distrs.length; ++distr)
                 {
-                    double[] times = new double[MEASURMENTS];
-                    int total_wrong = 0;
-                    for (int i = 0; i < WARMUPS + MEASURMENTS; i++)
+                    for (int num_threads : nums)
                     {
-                        try
+                        double[] times = new double[MEASURMENTS];
+                        int total_wrong = 0;
+                        for (int i = 0; i < WARMUPS + MEASURMENTS; i++)
                         {
-                            // Create a standard lock free skip list
-                            LockFreeSet<Integer> lockFreeSet = new LockFreeSkipList<>();
+                            try
+                            {
+                                // Create a standard lock free skip list
+                                LockFreeSet<Integer> lockFreeSet = newList(logging, num_threads);
 
-                            // Create a discrete distribution with seed 42 such that,
-                            // p(0) = 1/10, p(1) = 1/10, p(2) = 8/10.
-                            Distribution ops = new Distribution.Discrete(ops_seed, distrs[distr]);
+                                // Create a discrete distribution with seed 42 such that,
+                                // p(0) = 1/10, p(1) = 1/10, p(2) = 8/10.
+                                Distribution ops = new Distribution.Discrete(ops_seed, distrs[distr]);
 
-                            // Run experiment with 16 threads.
-                            long time = run_experiment(num_threads, count, lockFreeSet, ops, val_distrs[values]);
-                            if (i < WARMUPS)
-                                continue;
+                                // Run experiment with 16 threads.
+                                long time = run_experiment(num_threads, count, lockFreeSet, ops, val_distrs[values]);
+                                if (i < WARMUPS)
+                                    continue;
 
-                            times[i - WARMUPS] = (double) time / 1_000_000.0; // get times in ms, so we can actually interpret them
+                                times[i - WARMUPS] = (double) time / 1_000_000.0; // get times in ms, so we can actually interpret them
 
-                            // Get the log
-                            Log.Entry[] log = lockFreeSet.getLog();
+                                // Get the log
+                                Log.Entry[] log = lockFreeSet.getLog();
 
-                            // Check sequential consistency
-                            int wrong = Log.validate(log);
-                            total_wrong += wrong;
-                            if (wrong != 0)
-                                System.err.println(i - WARMUPS + ": " + wrong + " are wrong out of " + log.length);
-                            if (log.length != num_threads * count)
-                                System.err.println(i - WARMUPS + ": " + "Log size is " + log.length + " instead of "
-                                        + num_threads * count);
+                                // Check sequential consistency
+                                int wrong = Log.validate(log);
+                                total_wrong += wrong;
+                                if (wrong != 0)
+                                    System.err.println(i - WARMUPS + ": " + wrong + " are wrong out of " + log.length);
+                                if (log.length != num_threads * count)
+                                    System.err.println(i - WARMUPS + ": " + "Log size is " + log.length + " instead of "
+                                            + num_threads * count);
+                            }
+                            catch (Exception e)
+                            {
+                                e.printStackTrace();
+                                System.exit(1);
+                            }
                         }
-                        catch (Exception e)
-                        {
-                            e.printStackTrace();
-                            System.exit(1);
-                        }
+                        // calc std_dev and mean etc:
+                        // mean:
+                        double mean = Arrays.stream(times).average().getAsDouble();
+                        // standard deviation:
+                        double std_dev = Math
+                                .sqrt(Arrays.stream(times).map(x -> Math.pow(x - mean, 2)).average().getAsDouble());
+                        if (total_wrong != 0)
+                            System.out.println(
+                                    "Total wrong: " + total_wrong + " out of " + num_threads * count * MEASURMENTS);
+                        System.out.println("Took " + mean + "ms (std=" + std_dev + ") for " + num_threads + " workers, "
+                                + distrToString(distr) + ", " + valuesToString(values) + " values, "
+                                + loggingToString(logging) + " logging.\n");
                     }
-                    // calc std_dev and mean etc:
-                    // mean:
-                    double mean = Arrays.stream(times).average().getAsDouble();
-                    // standard deviation:
-                    double std_dev = Math
-                            .sqrt(Arrays.stream(times).map(x -> Math.pow(x - mean, 2)).average().getAsDouble());
-                    if (total_wrong != 0)
-                        System.out.println(
-                                "Total wrong: " + total_wrong + " out of " + num_threads * count * MEASURMENTS);
-                    System.out.println("Took " + mean + "ms (std=" + std_dev + ") for " + num_threads + " workers, "
-                            + distrToString(distr) + ", " + valuesToString(values) + " values.\n");
                 }
             }
+        }
+    }
+
+    private static LockFreeSet<Integer> newList(int logging, int num_threads)
+    {
+        switch (logging)
+        {
+        case 0:
+            return new LockFreeSkipList<Integer>();
+        case 1:
+            return new LockFreeSkipListLocal<Integer>(num_threads);
+        case 2:
+            return new LockFreeSkipListGlobal<Integer>();
+        default:
+            throw new RuntimeException("Unknown logging: " + logging);
         }
     }
 
@@ -188,6 +207,21 @@ public class Experiment
             return "uniform";
         case 1:
             return "normal";
+        default:
+            return "???";
+        }
+    }
+
+    private static String loggingToString(int logging)
+    {
+        switch (logging)
+        {
+        case 0:
+            return "lock";
+        case 1:
+            return "local";
+        case 2:
+            return "global";
         default:
             return "???";
         }
