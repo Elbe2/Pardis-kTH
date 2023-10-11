@@ -14,6 +14,7 @@ public class LockFreeSkipList<T extends Comparable<T>> implements LockFreeSet<T>
 
     private ArrayList<Log.Entry> log;
     private Lock lock;
+    private Lock lock2;
 
     public LockFreeSkipList()
     {
@@ -23,21 +24,22 @@ public class LockFreeSkipList<T extends Comparable<T>> implements LockFreeSet<T>
         }
         log = new ArrayList<Log.Entry>();
         lock = new ReentrantLock();
+        lock2 = new ReentrantLock();
     }
 
     private void submitEntry(Log.Entry e)
     {
-        lock.lock();
+        lock2.lock();
         try
         {
             log.add(e);
         }
         finally
         {
-            lock.unlock();
+            lock2.unlock();
         }
     }
-
+    
     private static final class Node<T>
     {
         private final T value;
@@ -201,7 +203,7 @@ public class LockFreeSkipList<T extends Comparable<T>> implements LockFreeSet<T>
                     succ = succs[bottomLevel].next[bottomLevel].get(marked);
                     if (iMarkedIt)
                     {
-                        find(x, preds, succs, null);
+                        find(x, preds, succs, null); // what does this do?
                         entry.retval = true;
                         submitEntry(entry);
                         return true;
@@ -248,12 +250,30 @@ public class LockFreeSkipList<T extends Comparable<T>> implements LockFreeSet<T>
                 while (marked[0])
                 {
                     curr = succ;
-                    succ = curr.next[level].get(marked);
+                    lock.lock();
+                    try
+                    {
+                        entry.timestamp = System.nanoTime();
+                        succ = curr.next[level].get(marked);
+                    }
+                    finally
+                    {
+                        lock.unlock();
+                    }
                 }
                 if (curr.value != null && x.compareTo(curr.value) < 0)
                 {
                     pred = curr;
-                    curr = succ;
+                    lock.lock();
+                    try
+                    {
+                        entry.timestamp = System.nanoTime();
+                        curr = succ;
+                    }
+                    finally
+                    {
+                        lock.unlock();
+                    }
                 }
                 else
                 {
