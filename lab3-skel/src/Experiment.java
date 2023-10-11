@@ -107,7 +107,7 @@ public class Experiment
         Distribution[] val_distrs = new Distribution[] { new Distribution.Uniform(val_seed, 0, count),
                 new Distribution.Normal(val_seed, 15, 0, count) };
         int[][] distrs = new int[][] { new int[] { 1, 1, 8 }, new int[] { 1, 1, 0 } };
-        for (int logging = 0; logging != 3; ++logging)
+        for (int logging = 0; logging != 4; ++logging)
         {
             for (int values = 0; values != val_distrs.length; ++values)
             {
@@ -139,13 +139,17 @@ public class Experiment
                                 Log.Entry[] log = lockFreeSet.getLog();
 
                                 // Check sequential consistency
-                                int wrong = Log.validate(log);
-                                total_wrong += wrong;
-                                if (wrong != 0)
-                                    System.err.println(i - WARMUPS + ": " + wrong + " are wrong out of " + log.length);
-                                if (log.length != num_threads * count)
-                                    System.err.println(i - WARMUPS + ": " + "Log size is " + log.length + " instead of "
-                                            + num_threads * count);
+                                if (log != null)
+                                {
+                                    int wrong = Log.validate(log);
+                                    total_wrong += wrong;
+                                    if (wrong != 0)
+                                        System.err.println(
+                                                i - WARMUPS + ": " + wrong + " are wrong out of " + log.length);
+                                    if (log.length != num_threads * count)
+                                        System.err.println(i - WARMUPS + ": " + "Log size is " + log.length
+                                                + " instead of " + num_threads * count);
+                                }
                             }
                             catch (Exception e)
                             {
@@ -176,10 +180,12 @@ public class Experiment
         switch (logging)
         {
         case 0:
-            return new LockFreeSkipList<Integer>();
+            return new LockFreeSkipListPure<Integer>();
         case 1:
-            return new LockFreeSkipListLocal<Integer>(num_threads);
+            return new LockFreeSkipList<Integer>();
         case 2:
+            return new LockFreeSkipListLocal<Integer>(num_threads);
+        case 3:
             return new LockFreeSkipListGlobal<Integer>();
         default:
             throw new RuntimeException("Unknown logging: " + logging);
@@ -217,10 +223,12 @@ public class Experiment
         switch (logging)
         {
         case 0:
-            return "lock";
+            return "no";
         case 1:
-            return "local";
+            return "lock";
         case 2:
+            return "local";
+        case 3:
             return "global";
         default:
             return "???";
