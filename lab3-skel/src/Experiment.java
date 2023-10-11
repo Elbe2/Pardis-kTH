@@ -161,9 +161,35 @@ public class Experiment
                         System.out.println(
                                 "Total wrong: " + total_wrong + " out of " + num_threads * count * MEASURMENTS);
                     System.out.println("Took " + mean + "ms (std=" + std_dev + ") for " + num_threads + " workers, "
-                            + distr + " distrs, " + values + " values.\n");
+                            + distrToString(distr) + ", " + valuesToString(values) + " values.\n");
                 }
             }
+        }
+    }
+
+    private static String distrToString(int distr)
+    {
+        switch (distr)
+        {
+        case 0:
+            return "10% add, 10% remove, 80% contains";
+        case 1:
+            return "50% add, 50% remove, no contains";
+        default:
+            return "???";
+        }
+    }
+
+    private static String valuesToString(int distr)
+    {
+        switch (distr)
+        {
+        case 0:
+            return "uniform";
+        case 1:
+            return "normal";
+        default:
+            return "???";
         }
     }
 }
