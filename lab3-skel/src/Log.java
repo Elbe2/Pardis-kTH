@@ -15,7 +15,7 @@ public class Log
         // Do not implement
     }
 
-    public static boolean validate(Log.Entry[] log, int num_threads)
+    public static boolean validate(Log.Entry[] log, int num_threads, boolean save)
     {
         Set<Integer> seqSet = new HashSet<>();
         int wrong = 0;
@@ -52,19 +52,22 @@ public class Log
             wrong += 1;
 
         }
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter("file-"+num_threads+".txt", false))) {
-            for (Entry entry : sortedLog) {
-                writer.write(entry.toString());
-                writer.newLine(); // Write a new line after each entry
+        if(save)
+        {
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter("file-"+num_threads+".txt", false))) {
+                for (Entry entry : sortedLog) {
+                    writer.write(entry.toString());
+                    writer.newLine(); // Write a new line after each entry
+                }
+                writer.newLine();
+                writer.newLine();
+            } catch (IOException e) {
+                e.printStackTrace();
+                // Handle the exception appropriately, e.g., by logging or throwing it
             }
-            writer.newLine();
-            writer.newLine();
-        } catch (IOException e) {
-            e.printStackTrace();
-            // Handle the exception appropriately, e.g., by logging or throwing it
         }
-
-        System.out.println("Difference is " + wrong + " out of " + sortedLog.length);
+        if(wrong>0)
+            System.out.println("Difference is " + wrong + " out of " + sortedLog.length);
         return wrong>0;
     }
 
