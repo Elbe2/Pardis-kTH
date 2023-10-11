@@ -1,0 +1,149 @@
+Took 24.78842ms (std=1.9774076948368537) for 1 workers, 10% add, 10% remove, 80% contains, uniform values, no logging.
+
+Took 31.23167ms (std=1.4161484901308905) for 2 workers, 10% add, 10% remove, 80% contains, uniform values, no logging.
+
+Took 40.17462ms (std=3.6824724405757605) for 4 workers, 10% add, 10% remove, 80% contains, uniform values, no logging.
+
+Took 56.72464ms (std=4.626578096001407) for 8 workers, 10% add, 10% remove, 80% contains, uniform values, no logging.
+
+Took 45.607299999999995ms (std=2.9453857166761717) for 1 workers, 50% add, 50% remove, no contains, uniform values, no logging.
+
+Took 61.7795ms (std=11.677063665665269) for 2 workers, 50% add, 50% remove, no contains, uniform values, no logging.
+
+Took 72.32302999999999ms (std=6.2094238929308085) for 4 workers, 50% add, 50% remove, no contains, uniform values, no logging.
+
+Took 95.27628ms (std=4.560399897772126) for 8 workers, 50% add, 50% remove, no contains, uniform values, no logging.
+
+Took 29.15947ms (std=0.6885365771692884) for 1 workers, 10% add, 10% remove, 80% contains, normal values, no logging.
+
+Took 37.678430000000006ms (std=2.1594927682444314) for 2 workers, 10% add, 10% remove, 80% contains, normal values, no logging.
+
+Took 44.5685ms (std=1.9306680403425127) for 4 workers, 10% add, 10% remove, 80% contains, normal values, no logging.
+
+Took 60.257979999999996ms (std=3.1080473187517605) for 8 workers, 10% add, 10% remove, 80% contains, normal values, no logging.
+
+Took 46.72304ms (std=1.9709119976295235) for 1 workers, 50% add, 50% remove, no contains, normal values, no logging.
+
+Took 54.932249999999996ms (std=2.1908873276597314) for 2 workers, 50% add, 50% remove, no contains, normal values, no logging.
+
+Took 61.64112ms (std=2.8054911262736137) for 4 workers, 50% add, 50% remove, no contains, normal values, no logging.
+
+Took 81.58773ms (std=2.320633712609553) for 8 workers, 50% add, 50% remove, no contains, normal values, no logging.
+
+Took 52.413779999999996ms (std=1.6946169294563305) for 1 workers, 10% add, 10% remove, 80% contains, uniform values, lock logging.
+
+Took 221.05003000000002ms (std=6.777339103224808) for 2 workers, 10% add, 10% remove, 80% contains, uniform values, lock logging.
+
+Total wrong: 1 out of 4000000
+Took 471.63705ms (std=17.396285635862043) for 4 workers, 10% add, 10% remove, 80% contains, uniform values, lock logging.
+
+Total wrong: 2 out of 8000000
+Took 1040.55695ms (std=59.1027967268259) for 8 workers, 10% add, 10% remove, 80% contains, uniform values, lock logging.
+
+Took 76.14367ms (std=1.8112005836184994) for 1 workers, 50% add, 50% remove, no contains, uniform values, lock logging.
+
+Took 276.21948000000003ms (std=7.814910124729516) for 2 workers, 50% add, 50% remove, no contains, uniform values, lock logging.
+
+Took 648.25991ms (std=30.71475545823049) for 4 workers, 50% add, 50% remove, no contains, uniform values, lock logging.
+
+Total wrong: 4 out of 8000000
+Took 1487.10327ms (std=59.147679114045566) for 8 workers, 50% add, 50% remove, no contains, uniform values, lock logging.
+
+Took 63.2085ms (std=2.4756450876488745) for 1 workers, 10% add, 10% remove, 80% contains, normal values, lock logging.
+
+Took 203.64887000000002ms (std=13.163177928300591) for 2 workers, 10% add, 10% remove, 80% contains, normal values, lock logging.
+
+Took 466.87788ms (std=13.539666288561174) for 4 workers, 10% add, 10% remove, 80% contains, normal values, lock logging.
+
+Total wrong: 13 out of 8000000
+Took 998.9232599999999ms (std=32.03345756146847) for 8 workers, 10% add, 10% remove, 80% contains, normal values, lock logging.
+
+Took 82.3669ms (std=6.974913377956748) for 1 workers, 50% add, 50% remove, no contains, normal values, lock logging.
+
+Total wrong: 2 out of 2000000
+Took 236.33685999999997ms (std=9.583183961940836) for 2 workers, 50% add, 50% remove, no contains, normal values, lock logging.
+
+Total wrong: 6 out of 4000000
+Took 694.30178ms (std=21.5659422981144) for 4 workers, 50% add, 50% remove, no contains, normal values, lock logging.
+
+Total wrong: 19 out of 8000000
+Took 1281.01874ms (std=92.70476274709083) for 8 workers, 50% add, 50% remove, no contains, normal values, lock logging.
+
+Took 42.81741ms (std=1.0117868060515518) for 1 workers, 10% add, 10% remove, 80% contains, uniform values, local logging.
+
+Took 52.681470000000004ms (std=1.105276808813068) for 2 workers, 10% add, 10% remove, 80% contains, uniform values, local logging.
+
+Took 64.11758ms (std=1.9342510921801241) for 4 workers, 10% add, 10% remove, 80% contains, uniform values, local logging.
+
+Total wrong: 3 out of 8000000
+Took 93.47935ms (std=9.747286917727415) for 8 workers, 10% add, 10% remove, 80% contains, uniform values, local logging.
+
+Took 68.92903ms (std=2.1568058637948875) for 1 workers, 50% add, 50% remove, no contains, uniform values, local logging.
+
+Took 82.50947ms (std=4.511067123430996) for 2 workers, 50% add, 50% remove, no contains, uniform values, local logging.
+
+Total wrong: 2 out of 4000000
+Took 101.23554ms (std=4.866337475186032) for 4 workers, 50% add, 50% remove, no contains, uniform values, local logging.
+
+Total wrong: 10 out of 8000000
+Took 147.27275ms (std=20.071170460551123) for 8 workers, 50% add, 50% remove, no contains, uniform values, local logging.
+
+Took 52.15160999999999ms (std=0.7658275686471473) for 1 workers, 10% add, 10% remove, 80% contains, normal values, local logging.
+
+Took 59.42233ms (std=2.363904364837966) for 2 workers, 10% add, 10% remove, 80% contains, normal values, local logging.
+
+Total wrong: 3 out of 4000000
+Took 69.49637ms (std=3.140024178266785) for 4 workers, 10% add, 10% remove, 80% contains, normal values, local logging.
+
+Total wrong: 9 out of 8000000
+Took 87.79789ms (std=3.0733640817351904) for 8 workers, 10% add, 10% remove, 80% contains, normal values, local logging.
+
+Took 70.50525ms (std=2.239740360957046) for 1 workers, 50% add, 50% remove, no contains, normal values, local logging.
+
+Total wrong: 2 out of 2000000
+Took 83.56577ms (std=4.737525208386761) for 2 workers, 50% add, 50% remove, no contains, normal values, local logging.
+
+Total wrong: 4 out of 4000000
+Took 90.6304ms (std=5.53888471625832) for 4 workers, 50% add, 50% remove, no contains, normal values, local logging.
+
+Total wrong: 26 out of 8000000
+Took 139.09232ms (std=26.157580329181826) for 8 workers, 50% add, 50% remove, no contains, normal values, local logging.
+
+Took 47.77778ms (std=0.9031619121730057) for 1 workers, 10% add, 10% remove, 80% contains, uniform values, global logging.
+
+Took 60.8994ms (std=4.1230121479326245) for 2 workers, 10% add, 10% remove, 80% contains, uniform values, global logging.
+
+Took 68.67697000000001ms (std=1.6115112261787052) for 4 workers, 10% add, 10% remove, 80% contains, uniform values, global logging.
+
+Total wrong: 2 out of 8000000
+Took 95.95192ms (std=2.491993604245404) for 8 workers, 10% add, 10% remove, 80% contains, uniform values, global logging.
+
+Took 69.36019ms (std=1.7751457480725368) for 1 workers, 50% add, 50% remove, no contains, uniform values, global logging.
+
+Took 87.35681ms (std=2.3037544380640913) for 2 workers, 50% add, 50% remove, no contains, uniform values, global logging.
+
+Took 104.8887ms (std=2.161537970520066) for 4 workers, 50% add, 50% remove, no contains, uniform values, global logging.
+
+Total wrong: 2 out of 8000000
+Took 176.73932ms (std=73.11401053670629) for 8 workers, 50% add, 50% remove, no contains, uniform values, global logging.
+
+Took 60.42895000000001ms (std=35.06609477498885) for 1 workers, 10% add, 10% remove, 80% contains, normal values, global logging.
+
+Took 64.9434ms (std=1.0428459435602164) for 2 workers, 10% add, 10% remove, 80% contains, normal values, global logging.
+
+Total wrong: 5 out of 4000000
+Took 70.42636999999999ms (std=2.091263915458782) for 4 workers, 10% add, 10% remove, 80% contains, normal values, global logging.
+
+Total wrong: 5 out of 8000000
+Took 109.05131000000002ms (std=40.144356837753676) for 8 workers, 10% add, 10% remove, 80% contains, normal values, global logging.
+
+Took 72.92674ms (std=5.866842849471939) for 1 workers, 50% add, 50% remove, no contains, normal values, global logging.
+
+Total wrong: 2 out of 2000000
+Took 88.33772ms (std=7.275133638470156) for 2 workers, 50% add, 50% remove, no contains, normal values, global logging.
+
+Total wrong: 4 out of 4000000
+Took 98.34943000000001ms (std=10.711896578295555) for 4 workers, 50% add, 50% remove, no contains, normal values, global logging.
+
+Total wrong: 18 out of 8000000
+Took 199.29721ms (std=93.80837880446983) for 8 workers, 50% add, 50% remove, no contains, normal values, global logging.
