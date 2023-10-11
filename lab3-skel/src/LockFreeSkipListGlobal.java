@@ -1,9 +1,6 @@
 import java.util.concurrent.atomic.AtomicMarkableReference;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.ArrayList;
 
 public class LockFreeSkipListGlobal<T extends Comparable<T>> implements LockFreeSet<T>
 {
@@ -15,7 +12,7 @@ public class LockFreeSkipListGlobal<T extends Comparable<T>> implements LockFree
 
     private ConcurrentLinkedQueue<Log.Entry> log;
 
-    public LockFreeSkipListGlobal(int num_threads)
+    public LockFreeSkipListGlobal()
     {
         for (int i = 0; i < head.next.length; i++)
         {

@@ -1,6 +1,4 @@
 import java.util.concurrent.atomic.AtomicMarkableReference;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.ArrayList;
 
@@ -20,11 +18,13 @@ public class LockFreeSkipListLocal<T extends Comparable<T>> implements LockFreeS
         {
             head.next[i] = new AtomicMarkableReference<LockFreeSkipListLocal.Node<T>>(tail, false);
         }
-        log = new ArrayList[num_threads];
+        @SuppressWarnings("unchecked")
+        ArrayList<Log.Entry>[] log = new ArrayList[num_threads];
         for (int i = 0; i < num_threads; i++)
         {
             log[i] = new ArrayList<Log.Entry>();
         }
+        this.log = log;
     }
 
     private static final class Node<T>
