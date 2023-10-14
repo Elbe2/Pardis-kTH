@@ -181,6 +181,7 @@ public class LockFreeSkipListLocal<T extends Comparable<T>> implements LockFreeS
                     }
                     else if (marked[0])
                     {
+                        entry.method = Log.Method.REMOVE_STAR;
                         log[threadId].add(entry);
                         return false;
                     }
@@ -298,6 +299,20 @@ public class LockFreeSkipListLocal<T extends Comparable<T>> implements LockFreeS
             log.addAll(threadLog);
         }
         Log.Entry[] res = log.toArray(new Log.Entry[log.size()]);
+        Arrays.sort(res, Comparator.comparingLong(entry -> entry.timestamp));
+        long prev = res[0].timestamp;
+        for (int i = 1; i < res.length; i++)
+        {
+            if (res[i].method == Log.Method.REMOVE)
+            {
+                prev = res[i].timestamp;
+            }
+            else if (res[i].method == Log.Method.REMOVE_STAR)
+            {
+                res[i].timestamp = prev + 1;
+                res[i].method = Log.Method.REMOVE;
+            }
+        }
         Arrays.sort(res, Comparator.comparingLong(entry -> entry.timestamp));
         return res;
     }

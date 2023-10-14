@@ -109,6 +109,23 @@ public class Experiment
         int[][] distrs = new int[][] { new int[] { 1, 1, 8 }, new int[] { 1, 1, 0 } };
         for (int logging = 0; logging != 4; ++logging)
         {
+            for (int i = 0; i != WARMUPS; ++i)
+            {
+                try
+                {
+                    LockFreeSet<Integer> lockFreeSet = newList(logging, 1);
+                    Distribution ops = new Distribution.Discrete(ops_seed, distrs[0]);
+                    run_experiment(1, count, lockFreeSet, ops, val_distrs[0]);
+                }
+                catch (Exception e)
+                {
+                    e.printStackTrace();
+                    System.exit(1);
+                }
+            }
+        }
+        for (int logging = 0; logging != 4; ++logging)
+        {
             for (int values = 0; values != val_distrs.length; ++values)
             {
                 for (int distr = 0; distr != distrs.length; ++distr)
@@ -117,25 +134,16 @@ public class Experiment
                     {
                         double[] times = new double[MEASURMENTS];
                         int total_wrong = 0;
-                        for (int i = 0; i < WARMUPS + MEASURMENTS; i++)
+                        for (int i = 0; i < MEASURMENTS; i++)
                         {
                             try
                             {
-                                // Create a standard lock free skip list
                                 LockFreeSet<Integer> lockFreeSet = newList(logging, num_threads);
-
-                                // Create a discrete distribution with seed 42 such that,
-                                // p(0) = 1/10, p(1) = 1/10, p(2) = 8/10.
                                 Distribution ops = new Distribution.Discrete(ops_seed, distrs[distr]);
-
-                                // Run experiment with 16 threads.
                                 long time = run_experiment(num_threads, count, lockFreeSet, ops, val_distrs[values]);
-                                if (i < WARMUPS)
-                                    continue;
 
-                                times[i - WARMUPS] = (double) time / 1_000_000.0; // get times in ms, so we can actually interpret them
+                                times[i] = (double) time / 1_000_000.0; // get times in ms, so we can actually interpret them
 
-                                // Get the log
                                 Log.Entry[] log = lockFreeSet.getLog();
 
                                 // Check sequential consistency
@@ -144,11 +152,10 @@ public class Experiment
                                     int wrong = Log.validate(log);
                                     total_wrong += wrong;
                                     if (wrong != 0)
-                                        System.err.println(
-                                                i - WARMUPS + ": " + wrong + " are wrong out of " + log.length);
+                                        System.err.println(i + ": " + wrong + " are wrong out of " + log.length);
                                     if (log.length != num_threads * count)
-                                        System.err.println(i - WARMUPS + ": " + "Log size is " + log.length
-                                                + " instead of " + num_threads * count);
+                                        System.err.println(i + ": " + "Log size is " + log.length + " instead of "
+                                                + num_threads * count);
                                 }
                             }
                             catch (Exception e)

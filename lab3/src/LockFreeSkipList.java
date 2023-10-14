@@ -212,6 +212,7 @@ public class LockFreeSkipList<T extends Comparable<T>> implements LockFreeSet<T>
                     }
                     else if (marked[0])
                     {
+                        entry.method = Log.Method.REMOVE_STAR;
                         submitEntry(entry);
                         return false;
                     }
@@ -372,6 +373,20 @@ public class LockFreeSkipList<T extends Comparable<T>> implements LockFreeSet<T>
     public Log.Entry[] getLog()
     {
         Log.Entry[] res = log.toArray(new Log.Entry[0]);
+        Arrays.sort(res, Comparator.comparingLong(entry -> entry.timestamp));
+        long prev = res[0].timestamp;
+        for (int i = 1; i < res.length; i++)
+        {
+            if (res[i].method == Log.Method.REMOVE)
+            {
+                prev = res[i].timestamp;
+            }
+            else if (res[i].method == Log.Method.REMOVE_STAR)
+            {
+                res[i].timestamp = prev + 1;
+                res[i].method = Log.Method.REMOVE;
+            }
+        }
         Arrays.sort(res, Comparator.comparingLong(entry -> entry.timestamp));
         return res;
     }

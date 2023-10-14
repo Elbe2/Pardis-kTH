@@ -46,7 +46,7 @@ public class Log
 
     public static enum Method
     {
-        ADD, REMOVE, CONTAINS
+        ADD, REMOVE, REMOVE_STAR, CONTAINS
     };
 
     // Log entry for linearization point.
