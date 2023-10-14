@@ -1,10 +1,10 @@
 import java.util.concurrent.atomic.AtomicMarkableReference;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ThreadLocalRandom;
 
-public class LockFreeSkipListGlobal<T extends Comparable<T>> implements LockFreeSet<T>
+public class LockFreeSkipListLocal<T extends Comparable<T>> implements LockFreeSet<T>
 {
     /* Number of levels */
     private static final int MAX_LEVEL = 16;
@@ -12,15 +12,21 @@ public class LockFreeSkipListGlobal<T extends Comparable<T>> implements LockFree
     private final Node<T> head = new Node<T>();
     private final Node<T> tail = new Node<T>();
 
-    private ConcurrentLinkedQueue<Log.Entry> log;
+    private ArrayList<Log.Entry>[] log;
 
-    public LockFreeSkipListGlobal()
+    public LockFreeSkipListLocal(int num_threads)
     {
         for (int i = 0; i < head.next.length; i++)
         {
-            head.next[i] = new AtomicMarkableReference<LockFreeSkipListGlobal.Node<T>>(tail, false);
+            head.next[i] = new AtomicMarkableReference<LockFreeSkipListLocal.Node<T>>(tail, false);
         }
-        log = new ConcurrentLinkedQueue<Log.Entry>();
+        @SuppressWarnings("unchecked")
+        ArrayList<Log.Entry>[] log = new ArrayList[num_threads];
+        for (int i = 0; i < num_threads; i++)
+        {
+            log[i] = new ArrayList<Log.Entry>();
+        }
+        this.log = log;
     }
 
     private static final class Node<T>
@@ -88,7 +94,7 @@ public class LockFreeSkipListGlobal<T extends Comparable<T>> implements LockFree
             boolean found = find(x, preds, succs, entry);
             if (found)
             {
-                log.add(entry); // --------------------------------------------- LINEAZIZATION POINT ----------------------------------------
+                log[threadId].add(entry); // --------------------------------------------- LINEAZIZATION POINT ----------------------------------------
                 return false;
             }
             else
@@ -119,7 +125,7 @@ public class LockFreeSkipListGlobal<T extends Comparable<T>> implements LockFree
                     }
                 }
                 entry.retval = true;
-                log.add(entry);
+                log[threadId].add(entry);
                 return true;
             }
         }
@@ -143,7 +149,7 @@ public class LockFreeSkipListGlobal<T extends Comparable<T>> implements LockFree
             boolean found = find(x, preds, succs, entry);
             if (!found)
             {
-                log.add(entry);
+                log[threadId].add(entry);
                 return false;
             }
             else
@@ -170,12 +176,13 @@ public class LockFreeSkipListGlobal<T extends Comparable<T>> implements LockFree
                     {
                         find(x, preds, succs, null); // what does this do?
                         entry.retval = true;
-                        log.add(entry);
+                        log[threadId].add(entry);
                         return true;
                     }
                     else if (marked[0])
                     {
-                        log.add(entry);
+                        entry.method = Log.Method.REMOVE_STAR;
+                        log[threadId].add(entry);
                         return false;
                     }
                 }
@@ -223,7 +230,7 @@ public class LockFreeSkipListGlobal<T extends Comparable<T>> implements LockFree
             }
         }
         entry.retval = curr.value != null && x.compareTo(curr.value) == 0;
-        log.add(entry);
+        log[threadId].add(entry);
         return entry.retval;
     }
 
@@ -286,7 +293,26 @@ public class LockFreeSkipListGlobal<T extends Comparable<T>> implements LockFree
 
     public Log.Entry[] getLog()
     {
+        ArrayList<Log.Entry> log = new ArrayList<Log.Entry>();
+        for (ArrayList<Log.Entry> threadLog : this.log)
+        {
+            log.addAll(threadLog);
+        }
         Log.Entry[] res = log.toArray(new Log.Entry[log.size()]);
+        Arrays.sort(res, Comparator.comparingLong(entry -> entry.timestamp));
+        long prev = res[0].timestamp;
+        for (int i = 1; i < res.length; i++)
+        {
+            if (res[i].method == Log.Method.REMOVE)
+            {
+                prev = res[i].timestamp;
+            }
+            else if (res[i].method == Log.Method.REMOVE_STAR)
+            {
+                res[i].timestamp = prev + 1;
+                res[i].method = Log.Method.REMOVE;
+            }
+        }
         Arrays.sort(res, Comparator.comparingLong(entry -> entry.timestamp));
         return res;
     }
