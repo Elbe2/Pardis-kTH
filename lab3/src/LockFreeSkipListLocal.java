@@ -174,7 +174,7 @@ public class LockFreeSkipListLocal<T extends Comparable<T>> implements LockFreeS
                     succ = succs[bottomLevel].next[bottomLevel].get(marked);
                     if (iMarkedIt)
                     {
-                        find(x, preds, succs, null); // what does this do?
+                        find(x, preds, succs, null); // clear marks
                         entry.retval = true;
                         log[threadId].add(entry);
                         return true;
@@ -300,17 +300,19 @@ public class LockFreeSkipListLocal<T extends Comparable<T>> implements LockFreeS
         }
         Log.Entry[] res = log.toArray(new Log.Entry[log.size()]);
         Arrays.sort(res, Comparator.comparingLong(entry -> entry.timestamp));
-        long prev = res[0].timestamp;
         for (int i = 1; i < res.length; i++)
         {
-            if (res[i].method == Log.Method.REMOVE)
+            if (res[i].method == Log.Method.REMOVE_STAR)
             {
-                prev = res[i].timestamp;
-            }
-            else if (res[i].method == Log.Method.REMOVE_STAR)
-            {
-                res[i].timestamp = prev + 1;
                 res[i].method = Log.Method.REMOVE;
+                for (int j = i - 1; j != -1; --j)
+                {
+                    if (res[j].method == Log.Method.REMOVE && res[j].argument.equals(res[i].argument))
+                    {
+                        res[i].timestamp = res[j].timestamp + 1;
+                        break;
+                    }
+                }
             }
         }
         Arrays.sort(res, Comparator.comparingLong(entry -> entry.timestamp));
