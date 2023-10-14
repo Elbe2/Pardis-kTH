@@ -1,6 +1,8 @@
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Callable;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.util.Arrays;
 
 public class Experiment
@@ -82,8 +84,8 @@ public class Experiment
         }
         else
         {
-            System.err.println("Usage: java Experiment <scenario> [<valSeed> <opsSeed>]");
-            System.err.println("scenario can be either 'local' or 'dardel'");
+            System.out.println("Usage: java Experiment <scenario> [<valSeed> <opsSeed>]");
+            System.out.println("scenario can be either 'local' or 'dardel'");
             return;
         }
         int[] nums;
@@ -100,8 +102,8 @@ public class Experiment
         }
         else
         {
-            System.err.println("Usage: java Experiment <scenario> [<valSeed> <opsSeed>]");
-            System.err.println("scenario can be either 'local' or 'dardel'");
+            System.out.println("Usage: java Experiment <scenario> [<valSeed> <opsSeed>]");
+            System.out.println("scenario can be either 'local' or 'dardel'");
             return;
         }
         Distribution[] val_distrs = new Distribution[] { new Distribution.Uniform(val_seed, 0, count),
@@ -152,7 +154,19 @@ public class Experiment
                                     int wrong = Log.validate(log);
                                     total_wrong += wrong;
                                     if (wrong != 0)
+                                    {
                                         System.err.println(i + ": " + wrong + " are wrong out of " + log.length);
+                                        // Save logs with errors to files:
+                                        BufferedWriter writer = new BufferedWriter(new FileWriter(
+                                                logging + "-" + values + "-" + distr + "-" + num_threads + "-" + i,
+                                                false));
+                                        for (Log.Entry entry : log)
+                                        {
+                                            writer.write(entry.toString());
+                                            writer.newLine();
+                                        }
+                                        writer.close();
+                                    }
                                     if (log.length != num_threads * count)
                                         System.err.println(i + ": " + "Log size is " + log.length + " instead of "
                                                 + num_threads * count);
